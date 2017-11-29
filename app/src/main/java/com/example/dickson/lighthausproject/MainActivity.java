@@ -58,25 +58,7 @@ public class MainActivity extends AppCompatActivity
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         } else {
-            Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-            System.out.println("size " + mBluetoothAdapter.getBondedDevices().size());
-            if (pairedDevices == null || pairedDevices.size() == 0) {
-                AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
-                builder1.setMessage("No paired devices found, Proceed to pair?");
-                builder1.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.cancel();
-                        Intent settingsIntent = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
-                        startActivity(settingsIntent);
-                    }
-                });
-                AlertDialog alert1 = builder1.create();
-                alert1.show();
-            } else {
-                ArrayList<BluetoothDevice> list = new ArrayList<>();
-                list.addAll(pairedDevices);
-            }
+            checkPairedStatus();        
         }
     }
     @Override
@@ -134,5 +116,26 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+    public void checkPairedStatus() {
+        Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+        System.out.println("size " + mBluetoothAdapter.getBondedDevices().size());
+        if (pairedDevices == null || pairedDevices.size() == 0) {
+            AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+            builder1.setMessage("No paired devices found, Proceed to pair?");
+            builder1.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.cancel();
+                    Intent settingsIntent = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
+                    startActivity(settingsIntent);
+                }
+            });
+            AlertDialog alert1 = builder1.create();
+            alert1.show();
+        } else {
+            ArrayList<BluetoothDevice> list = new ArrayList<>();
+            list.addAll(pairedDevices);
+        }
     }
 }
