@@ -2,7 +2,6 @@ package com.example.dickson.lighthausproject;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -18,6 +17,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -35,14 +37,16 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+        //Instantiating XML elements for usage
+        Button startBtn = (Button) findViewById(R.id.startBtn);
+        Button focusBtn = (Button) findViewById(R.id.focusBtn);
+        Button sendBtn = (Button) findViewById(R.id.sendBtn);
+        TextView idPhoto = (TextView) findViewById(R.id.idPhoto);
+        ImageView capturedImage = (ImageView) findViewById(R.id.imageCaptured);
+
+        idPhoto.setText("ID of image goes here");
+        capturedImage.setImageResource(R.drawable.ic_menu_camera);
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -58,7 +62,7 @@ public class MainActivity extends AppCompatActivity
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         } else {
-            checkPairedStatus();        
+            checkPairedStatus();
         }
     }
     @Override
