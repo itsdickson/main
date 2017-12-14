@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "230519435266",
+    "firebase_url": "https://lighthaus-2890e.firebaseio.com",
+    "project_id": "lighthaus-2890e",
+    "storage_bucket": "lighthaus-2890e.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:230519435266:android:97afaa1e1280dd4e",
+        "android_client_info": {
+          "package_name": "com.example.dickson.lighthausproject"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "230519435266-knpb1ie11obg63fa3v8fhl70bpta480m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.dickson.lighthausproject",
+            "certificate_hash": "7e5b824a88af20ad820a0e54072ac064d58a233d"
+          }
+        },
+        {
+          "client_id": "230519435266-oav938gebfbngmfeeiknvs91km4kgndj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDba5421EIJ36ZJl7sC3l-jLDIj8W0G5IU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "230519435266-oav938gebfbngmfeeiknvs91km4kgndj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
