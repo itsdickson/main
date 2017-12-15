@@ -20,6 +20,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 
 
 /**
@@ -92,7 +94,20 @@ public class LoginActivity extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 mProgressDialog.dismiss();
                                 if (!task.isSuccessful()) {
-                                    // there was an error
+                                    try {
+                                        throw task.getException();
+                                    } catch (FirebaseAuthException e) {
+                                        switch (e.getErrorCode()) {
+                                            case "ERROR_USER_NOT_FOUND":
+                                                Toast.makeText(LoginActivity.this, "User not found.", Toast.LENGTH_SHORT).show();
+                                                break;
+                                            case "ERROR_WRONG_PASSWORD":
+                                                Toast.makeText(LoginActivity.this, "Invalid password.", Toast.LENGTH_SHORT).show();
+                                                break;
+                                        }
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
                                 } else {
                                     Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                                     startActivity(intent);
