@@ -32,6 +32,16 @@
         tools:layout_editor_absoluteX="16dp"
         tools:layout_editor_absoluteY="124dp" />
 
+    <FrameLayout
+        android:id="@+id/cameraPreview"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/sendBtn"
+        android:layout_below="@+id/startBtn"
+        android:layout_centerHorizontal="true">
+
+    </FrameLayout>
+
     <ImageView
         android:id="@+id/imageCaptured"
         android:layout_width="match_parent"
