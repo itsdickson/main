@@ -7,6 +7,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.text.method.PasswordTransformationMethod;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -21,7 +22,8 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
-import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
+import static android.content.ContentValues.TAG;
+import com.google.firebase.auth.FirebaseUser;
 
 
 /**
@@ -30,10 +32,44 @@ import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException;
 
 public class LoginActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
     private EditText editEmail, editPass;
     private Button signUp, signIn;
     private CheckBox visibility;
     private ProgressDialog mProgressDialog;
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if(mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mAuth = FirebaseAuth.getInstance();
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if(user != null) {
+                    // User is signed in
+                    Log.d(TAG, "User is signed in" + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "User is signed out");
+                }
+            }
+        };
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +96,25 @@ public class LoginActivity extends AppCompatActivity {
         });
 
         mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if(user != null) {
+            Intent i = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(i);
+        }
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if(user != null) {
+                    // User is signed in
+                    Log.d(TAG, "User is signed in" + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "User is signed out");
+                }
+            }
+        };
+
         mProgressDialog = new ProgressDialog(this);
 
         signUp.setOnClickListener(new View.OnClickListener() {
