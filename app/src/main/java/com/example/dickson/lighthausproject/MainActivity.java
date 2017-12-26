@@ -115,6 +115,8 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    // Condition where app's bluetooth is not turned on
+    // After Alert Dialog to turn on bluetooth, upon resume of lifecycle, app checks for pairing
     @Override
     public void onResume() {
         super.onResume();
@@ -124,8 +126,8 @@ public class MainActivity extends AppCompatActivity
         } else {
             checkPairedStatus();
         }
-
     }
+    
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
