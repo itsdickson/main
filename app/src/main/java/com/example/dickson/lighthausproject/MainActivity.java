@@ -124,6 +124,7 @@ public class MainActivity extends AppCompatActivity
         } else {
             checkPairedStatus();
         }
+
     }
     @Override
     public void onBackPressed() {
