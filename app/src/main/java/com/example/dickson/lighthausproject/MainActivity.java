@@ -11,6 +11,7 @@ import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
@@ -28,6 +29,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.dickson.lighthausproject.AccountActivity.LoginActivity;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -37,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -45,6 +51,7 @@ public class MainActivity extends AppCompatActivity
     private Camera mCamera;
     private CameraPreview mPreview;
     private ImageView capturedImage;
+    private FirebaseAuth mAuth;
 
     public static final int REQUEST_ENABLE_BT = 1;
     public static final int MEDIA_TYPE_IMAGE = 1;
@@ -61,6 +68,7 @@ public class MainActivity extends AppCompatActivity
         Button focusBtn = (Button) findViewById(R.id.focusBtn);
         Button sendBtn = (Button) findViewById(R.id.sendBtn);
         TextView idPhoto = (TextView) findViewById(R.id.idPhoto);
+
 
         // Create an instance of Camera
         mCamera = getCameraInstance();
@@ -127,7 +135,7 @@ public class MainActivity extends AppCompatActivity
             checkPairedStatus();
         }
     }
-    
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -176,15 +184,12 @@ public class MainActivity extends AppCompatActivity
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
 
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        } else if (id == R.id.nav_signOut) {
+            mAuth.getInstance().signOut();
+            Intent i = new Intent(this, LoginActivity.class);
+            startActivity(i);
         }
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -221,7 +226,6 @@ public class MainActivity extends AppCompatActivity
         if (mCamera != null){
             Log.i("Log", "Camera Released");
             mCamera.release();        // release the camera for other applications
-            mCamera = null;
         }
     }
 
