@@ -34,7 +34,7 @@
 
     <FrameLayout
         android:id="@+id/cameraPreview"
-        android:layout_width="match_parent"
+        android:layout_width="245dp"
         android:layout_height="wrap_content"
         android:layout_above="@+id/sendBtn"
         android:layout_below="@+id/startBtn"
