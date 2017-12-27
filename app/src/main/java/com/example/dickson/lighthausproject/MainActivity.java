@@ -11,7 +11,6 @@ import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
@@ -31,7 +30,6 @@ import android.widget.Toast;
 
 import com.example.dickson.lighthausproject.AccountActivity.LoginActivity;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -118,7 +116,16 @@ public class MainActivity extends AppCompatActivity
         focusBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                focusCamera();
+//                focusCamera();
+                mCamera.takePicture(null, null, mPicture);
+            }
+        });
+
+        sendBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPreview.setVisibility(View.INVISIBLE);
+                capturedImage.setVisibility(View.INVISIBLE);
             }
         });
     }
@@ -128,11 +135,15 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
-        if (!mBluetoothAdapter.isEnabled()) {
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        if (mBluetoothAdapter == null) {
+            Log.i("Info", "Bluetooth not supported");
         } else {
-            checkPairedStatus();
+            if (!mBluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            } else {
+                checkPairedStatus();
+            }
         }
     }
 
@@ -220,6 +231,7 @@ public class MainActivity extends AppCompatActivity
 
     public void activateCamera() {
         mPreview.setVisibility(View.VISIBLE);
+        capturedImage.setVisibility(View.INVISIBLE);
     }
 
     private void releaseCamera() {
