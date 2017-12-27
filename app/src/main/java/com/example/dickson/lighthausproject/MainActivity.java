@@ -75,7 +75,8 @@ public class MainActivity extends AppCompatActivity
         mPreview = new CameraPreview(this, mCamera);
         FrameLayout preview = (FrameLayout) findViewById(R.id.cameraPreview);
         preview.addView(mPreview);
-        preview.setVisibility(View.INVISIBLE);
+        preview.setVisibility(View.VISIBLE);
+        mPreview.setVisibility(View.INVISIBLE);
 
         // Initialisation of displayed image
         capturedImage = (ImageView) findViewById(R.id.imageCaptured);
