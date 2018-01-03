@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
 //                focusCamera();
+
                 mCamera.takePicture(null, null, mPicture);
             }
         });
@@ -300,6 +301,7 @@ public class MainActivity extends AppCompatActivity
             mPreview.setVisibility(View.INVISIBLE);
 
             File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+            scanMedia(pictureFile);
             if (pictureFile == null){
                 Log.d("Debug", "Error creating media file, check storage permissions");
                 return;
@@ -334,6 +336,13 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
+    }
+
+    private void scanMedia(File file) {
+        Uri uri = Uri.fromFile(file);
+        Intent scanFileIntent = new Intent(
+                Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
+        sendBroadcast(scanFileIntent);
     }
 
     private Bitmap scaleDownBitmapImage(Bitmap bitmap, int newWidth, int newHeight){
