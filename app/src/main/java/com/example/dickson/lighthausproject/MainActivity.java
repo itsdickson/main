@@ -1,6 +1,7 @@
 package com.example.dickson.lighthausproject;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
@@ -31,7 +32,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.dickson.lighthausproject.AccountActivity.LoginActivity;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -52,10 +57,14 @@ public class MainActivity extends AppCompatActivity
     private CameraPreview mPreview;
     private ImageView capturedImage;
     private FirebaseAuth mAuth;
+    private StorageReference mStorage;
+    private ProgressDialog mProgressDialog;
 
     public static final int REQUEST_ENABLE_BT = 1;
     public static final int MEDIA_TYPE_IMAGE = 1;
-    private static final int SELECT_IMAGE = 1;
+    public static final int SELECT_IMAGE = 1;
+
+    public static File tempFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +72,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mProgressDialog = new ProgressDialog(this);
+        mStorage = FirebaseStorage.getInstance().getReference();
 
         //Instantiating XML elements for usage
         Button startBtn = (Button) findViewById(R.id.startBtn);
@@ -131,6 +143,17 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v) {
                 mPreview.setVisibility(View.INVISIBLE);
                 capturedImage.setVisibility(View.INVISIBLE);
+                mProgressDialog.setMessage("Uploading...");
+                mProgressDialog.show();
+                Uri file = Uri.fromFile(tempFile);
+                StorageReference filepath = mStorage.child("Photos").child(file.getLastPathSegment());
+                filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
+                        mProgressDialog.dismiss();
+                    }
+                });
             }
         });
     }
@@ -301,6 +324,7 @@ public class MainActivity extends AppCompatActivity
             mPreview.setVisibility(View.INVISIBLE);
 
             File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+            tempFile = pictureFile;
             scanMedia(pictureFile);
             if (pictureFile == null){
                 Log.d("Debug", "Error creating media file, check storage permissions");
