@@ -39,6 +39,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -290,6 +291,10 @@ public class MainActivity extends AppCompatActivity
             mPreview.setVisibility(View.INVISIBLE);
 
             File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100 , bos);
+            byte[] bitmapdata = bos.toByteArray();
+
             tempFile = pictureFile;
             scanMedia(pictureFile);
             if (pictureFile == null){
@@ -299,7 +304,8 @@ public class MainActivity extends AppCompatActivity
 
             try {
                 FileOutputStream fos = new FileOutputStream(pictureFile);
-                fos.write(data);
+                fos.write(bitmapdata);
+                fos.flush();
                 fos.close();
                 Log.i("Log", "File Created");
             } catch (FileNotFoundException e) {
