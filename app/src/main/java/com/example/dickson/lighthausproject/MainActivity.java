@@ -25,6 +25,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -82,7 +83,6 @@ public class MainActivity extends AppCompatActivity
         Button sendBtn = (Button) findViewById(R.id.sendBtn);
         TextView idPhoto = (TextView) findViewById(R.id.idPhoto);
 
-
         // Create an instance of Camera
         mCamera = getCameraInstance();
 
@@ -132,9 +132,8 @@ public class MainActivity extends AppCompatActivity
         focusBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                focusCamera();
-
-                mCamera.takePicture(null, null, mPicture);
+                focusCamera();
+//                mCamera.takePicture(null, null, mPicture);
             }
         });
 
@@ -251,6 +250,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void activateCamera() {
+        Log.i("Info", "Camera Activated");
         mPreview.setVisibility(View.VISIBLE);
         capturedImage.setVisibility(View.INVISIBLE);
     }
@@ -282,7 +282,10 @@ public class MainActivity extends AppCompatActivity
                 Toast.makeText(MainActivity.this, "Empty", Toast.LENGTH_LONG).show();
                 return;
             }
-            capturedImage.setImageBitmap(scaleDownBitmapImage(bitmap, 300, 200));
+            Matrix matrix = new Matrix();
+            matrix.postRotate(90);
+            Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+            capturedImage.setImageBitmap(rotatedBitmap);
             capturedImage.setVisibility(View.VISIBLE);
             mPreview.setVisibility(View.INVISIBLE);
 
@@ -308,11 +311,6 @@ public class MainActivity extends AppCompatActivity
     };
 
     private void focusCamera() {
-        Camera.Parameters params = mCamera.getParameters();
-        if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
-            params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-        }
-        mCamera.setParameters(params);
         // Take picture immediately after focus
         mCamera.autoFocus(new Camera.AutoFocusCallback() {
             @Override
