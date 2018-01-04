@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity
 
     public static final int REQUEST_ENABLE_BT = 1;
     public static final int MEDIA_TYPE_IMAGE = 1;
-    public static final int SELECT_IMAGE = 1;
+    public static final int GALLERY_INTENT = 1;
 
     public static File tempFile;
 
@@ -168,16 +168,16 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
-        if (mBluetoothAdapter == null) {
-            Log.i("Info", "Bluetooth not supported");
-        } else {
-            if (!mBluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            } else {
-                checkPairedStatus();
-            }
-        }
+//        if (mBluetoothAdapter == null) {
+//            Log.i("Info", "Bluetooth not supported");
+//        } else {
+//            if (!mBluetoothAdapter.isEnabled()) {
+//                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+//            } else {
+//                checkPairedStatus();
+//            }
+//        }
     }
 
     @Override
@@ -227,10 +227,9 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_camera) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
-            Intent intent = new Intent();
+            Intent intent = new Intent(Intent.ACTION_PICK);
             intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);//
-            startActivityForResult(Intent.createChooser(intent, "Select Picture"),SELECT_IMAGE);
+            startActivity(intent);
 
         } else if (id == R.id.nav_signOut) {
             mAuth.getInstance().signOut();
@@ -242,32 +241,6 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
-    }
-    public void onActivityResult(int requestCode, int resultCode, Intent data)
-    {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == SELECT_IMAGE)
-        {
-            if (resultCode == Activity.RESULT_OK)
-            {
-                if (data != null)
-                {
-                    try
-                    {
-
-                        Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), data.getData());
-
-                    } catch (IOException e)
-                    {
-                        e.printStackTrace();
-                    }
-
-                }
-            } else if (resultCode == Activity.RESULT_CANCELED)
-            {
-                Toast.makeText(this, "Cancelled", Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 
     public void checkPairedStatus() {
