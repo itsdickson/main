@@ -1,5 +1,7 @@
 package com.example.dickson.lighthausproject;
 
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
@@ -11,6 +13,7 @@ import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
@@ -30,7 +33,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.dickson.lighthausproject.AccountActivity.LoginActivity;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -50,10 +57,14 @@ public class MainActivity extends AppCompatActivity
     private Camera mCamera;
     private CameraPreview mPreview;
     private ImageView capturedImage;
-    private FirebaseAuth mAuth;
+    static FirebaseAuth mAuth;
+    private StorageReference mStorage;
+    private ProgressDialog mProgressDialog;
 
     public static final int REQUEST_ENABLE_BT = 1;
     public static final int MEDIA_TYPE_IMAGE = 1;
+
+    public static File tempFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +72,10 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mProgressDialog = new ProgressDialog(this);
+        mStorage = FirebaseStorage.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
         //Instantiating XML elements for usage
         Button startBtn = (Button) findViewById(R.id.startBtn);
@@ -127,35 +142,36 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v) {
                 mPreview.setVisibility(View.INVISIBLE);
                 capturedImage.setVisibility(View.INVISIBLE);
+                mProgressDialog.setMessage("Uploading...");
+                mProgressDialog.show();
+                Uri file = Uri.fromFile(tempFile);
+                if (mAuth.getCurrentUser() != null) {
+                    String userDetails = mAuth.getCurrentUser().getEmail();
+                    StorageReference filepath = mStorage.child(userDetails).child(file.getLastPathSegment());
+                    filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
+                            mProgressDialog.dismiss();
+                        }
+                    });
+                }
             }
         });
     }
 
-    // Condition where app's bluetooth is not turned on
-    // After Alert Dialog to turn on bluetooth, upon resume of lifecycle, app checks for pairing
     @Override
     public void onResume() {
         super.onResume();
-        if (mBluetoothAdapter == null) {
-            Log.i("Info", "Bluetooth not supported");
-        } else {
-            if (!mBluetoothAdapter.isEnabled()) {
-                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            } else {
-                checkPairedStatus();
-            }
-        }
     }
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
+        super.onBackPressed();
+        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+        homeIntent.addCategory(Intent.CATEGORY_HOME);
+        homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(homeIntent);
     }
 
     @Override
@@ -195,6 +211,9 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_camera) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
+            Intent intent = new Intent(Intent.ACTION_PICK);
+            intent.setType("image/*");
+            startActivity(intent);
 
         } else if (id == R.id.nav_signOut) {
             mAuth.getInstance().signOut();
@@ -271,6 +290,8 @@ public class MainActivity extends AppCompatActivity
             mPreview.setVisibility(View.INVISIBLE);
 
             File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+            tempFile = pictureFile;
+            scanMedia(pictureFile);
             if (pictureFile == null){
                 Log.d("Debug", "Error creating media file, check storage permissions");
                 return;
@@ -302,6 +323,13 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
+    private void scanMedia(File file) {
+        Uri uri = Uri.fromFile(file);
+        Intent scanFileIntent = new Intent(
+                Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
+        sendBroadcast(scanFileIntent);
+    }
+
     private Bitmap scaleDownBitmapImage(Bitmap bitmap, int newWidth, int newHeight){
         Matrix matrix = new Matrix();
         matrix.postRotate(90);
@@ -321,7 +349,7 @@ public class MainActivity extends AppCompatActivity
         // using Environment.getExternalStorageState() before doing this.
 
         File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
-                Environment.DIRECTORY_PICTURES), "LightHausProject");
+                Environment.DIRECTORY_DCIM), "LightHausProject");
         Log.i("Log", "Photo Saved!");
         // This location works best if you want the created images to be shared
         // between applications and persist after your app has been uninstalled.
