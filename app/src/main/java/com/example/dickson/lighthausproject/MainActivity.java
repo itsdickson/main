@@ -56,13 +56,12 @@ public class MainActivity extends AppCompatActivity
     private Camera mCamera;
     private CameraPreview mPreview;
     private ImageView capturedImage;
-    private FirebaseAuth mAuth;
+    static FirebaseAuth mAuth;
     private StorageReference mStorage;
     private ProgressDialog mProgressDialog;
 
     public static final int REQUEST_ENABLE_BT = 1;
     public static final int MEDIA_TYPE_IMAGE = 1;
-    public static final int GALLERY_INTENT = 1;
 
     public static File tempFile;
 
@@ -162,32 +161,18 @@ public class MainActivity extends AppCompatActivity
         });
     }
 
-
-    // Condition where app's bluetooth is not turned on
-    // After Alert Dialog to turn on bluetooth, upon resume of lifecycle, app checks for pairing
     @Override
     public void onResume() {
         super.onResume();
-//        if (mBluetoothAdapter == null) {
-//            Log.i("Info", "Bluetooth not supported");
-//        } else {
-//            if (!mBluetoothAdapter.isEnabled()) {
-//                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-//                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-//            } else {
-//                checkPairedStatus();
-//            }
-//        }
     }
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
+        super.onBackPressed();
+        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
+        homeIntent.addCategory(Intent.CATEGORY_HOME);
+        homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(homeIntent);
     }
 
     @Override

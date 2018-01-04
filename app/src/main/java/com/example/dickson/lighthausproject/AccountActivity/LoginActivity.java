@@ -56,19 +56,11 @@ public class LoginActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         mAuth = FirebaseAuth.getInstance();
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
-                if(user != null) {
-                    // User is signed in
-                    Log.d(TAG, "User is signed in" + user.getUid());
-                } else {
-                    // User is signed out
-                    Log.d(TAG, "User is signed out");
+                if(mAuth != null) {
+                    Log.i("Log", "User is Logged in");
+                    Intent i = new Intent(this, MainActivity.class);
+                    startActivity(i);
                 }
-            }
-        };
     }
 
     @Override
