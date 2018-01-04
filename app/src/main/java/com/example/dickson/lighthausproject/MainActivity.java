@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity
 
         mProgressDialog = new ProgressDialog(this);
         mStorage = FirebaseStorage.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
         //Instantiating XML elements for usage
         Button startBtn = (Button) findViewById(R.id.startBtn);
@@ -146,17 +147,21 @@ public class MainActivity extends AppCompatActivity
                 mProgressDialog.setMessage("Uploading...");
                 mProgressDialog.show();
                 Uri file = Uri.fromFile(tempFile);
-                StorageReference filepath = mStorage.child("Photos").child(file.getLastPathSegment());
-                filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                    @Override
-                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                        Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
-                        mProgressDialog.dismiss();
-                    }
-                });
+                if (mAuth.getCurrentUser() != null) {
+                    String userDetails = mAuth.getCurrentUser().getEmail();
+                    StorageReference filepath = mStorage.child(userDetails).child(file.getLastPathSegment());
+                    filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
+                            mProgressDialog.dismiss();
+                        }
+                    });
+                }
             }
         });
     }
+
 
     // Condition where app's bluetooth is not turned on
     // After Alert Dialog to turn on bluetooth, upon resume of lifecycle, app checks for pairing
