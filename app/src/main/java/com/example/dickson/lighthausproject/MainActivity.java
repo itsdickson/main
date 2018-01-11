@@ -1,6 +1,5 @@
 package com.example.dickson.lighthausproject;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -13,7 +12,6 @@ import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
@@ -25,7 +23,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -50,6 +47,7 @@ import java.util.Date;
 import java.util.Set;
 
 
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -58,12 +56,13 @@ public class MainActivity extends AppCompatActivity
     private Camera mCamera;
     private CameraPreview mPreview;
     private ImageView capturedImage;
+    private TextView idPhoto;
     static FirebaseAuth mAuth;
     private StorageReference mStorage;
     private ProgressDialog mProgressDialog;
 
-    public static final int REQUEST_ENABLE_BT = 1;
     public static final int MEDIA_TYPE_IMAGE = 1;
+    public static int flag = 0;
 
     public static File tempFile;
 
@@ -82,7 +81,6 @@ public class MainActivity extends AppCompatActivity
         Button startBtn = (Button) findViewById(R.id.startBtn);
         Button focusBtn = (Button) findViewById(R.id.focusBtn);
         Button sendBtn = (Button) findViewById(R.id.sendBtn);
-        TextView idPhoto = (TextView) findViewById(R.id.idPhoto);
 
         // Create an instance of Camera
         mCamera = getCameraInstance();
@@ -94,11 +92,12 @@ public class MainActivity extends AppCompatActivity
         preview.setVisibility(View.VISIBLE);
         mPreview.setVisibility(View.INVISIBLE);
 
+
         // Initialisation of displayed image
         capturedImage = (ImageView) findViewById(R.id.imageCaptured);
         capturedImage.setVisibility(View.INVISIBLE);
+        idPhoto = (TextView) findViewById(R.id.idPhoto);
 
-        idPhoto.setText("ID of image goes here");
         capturedImage.setImageResource(R.drawable.ic_menu_camera);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -110,18 +109,14 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        if (mBluetoothAdapter == null) {
-            // Checks if device supports Bluetooth
-            Log.i("info:", "Bluetooth not supported");
-        } else {
-            // Checks if device is currently paired with other devices
             if (!mBluetoothAdapter.isEnabled()) {
                 Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
-            } else {
+                startActivity(enableBtIntent);
                 checkPairedStatus();
             }
-        }
+            else {
+                checkPairedStatus();
+            }
 
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -134,6 +129,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 focusCamera();
+                flag = 1;
 //                mCamera.takePicture(null, null, mPicture);
             }
         });
@@ -141,21 +137,26 @@ public class MainActivity extends AppCompatActivity
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mPreview.setVisibility(View.INVISIBLE);
-                capturedImage.setVisibility(View.INVISIBLE);
-                mProgressDialog.setMessage("Uploading...");
-                mProgressDialog.show();
-                Uri file = Uri.fromFile(tempFile);
-                if (mAuth.getCurrentUser() != null) {
-                    String userDetails = mAuth.getCurrentUser().getEmail();
-                    StorageReference filepath = mStorage.child(userDetails).child(file.getLastPathSegment());
-                    filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                        @Override
-                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                            Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
-                            mProgressDialog.dismiss();
-                        }
-                    });
+                if (flag == 0) {
+                    Toast.makeText(MainActivity.this, "No Image Captured", Toast.LENGTH_SHORT).show();
+                } else {
+                    mPreview.setVisibility(View.INVISIBLE);
+                    capturedImage.setVisibility(View.INVISIBLE);
+                    mProgressDialog.setMessage("Uploading...");
+                    mProgressDialog.show();
+                    Uri file = Uri.fromFile(tempFile);
+                    if (mAuth.getCurrentUser() != null) {
+                        String userDetails = mAuth.getCurrentUser().getEmail();
+                        StorageReference filepath = mStorage.child(userDetails).child(file.getLastPathSegment());
+                        filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
+                                mProgressDialog.dismiss();
+                                flag = 0;
+                            }
+                        });
+                    }
                 }
             }
         });
@@ -168,11 +169,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
-        Intent homeIntent = new Intent(Intent.ACTION_MAIN);
-        homeIntent.addCategory(Intent.CATEGORY_HOME);
-        homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        startActivity(homeIntent);
+        moveTaskToBack(true);
     }
 
     @Override
@@ -230,24 +227,26 @@ public class MainActivity extends AppCompatActivity
 
     public void checkPairedStatus() {
         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-        System.out.println("size " + mBluetoothAdapter.getBondedDevices().size());
-        if (pairedDevices == null || pairedDevices.size() == 0) {
-            AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
-            builder1.setMessage("No paired devices found, Proceed to pair?");
-            builder1.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    dialog.cancel();
-                    Intent settingsIntent = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
-                    startActivity(settingsIntent);
-                }
-            });
-            AlertDialog alert1 = builder1.create();
-            alert1.show();
-        } else {
-            ArrayList<BluetoothDevice> list = new ArrayList<>();
-            list.addAll(pairedDevices);
-        }
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+        builder1.setMessage("Proceed to pair new devices?");
+        builder1.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                Intent settingsIntent = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
+                startActivity(settingsIntent);
+            }
+        });
+        builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        AlertDialog alert1 = builder1.create();
+        alert1.show();
+        ArrayList<BluetoothDevice> list = new ArrayList<>();
+        list.addAll(pairedDevices);
     }
 
     public void activateCamera() {
@@ -291,6 +290,11 @@ public class MainActivity extends AppCompatActivity
             mPreview.setVisibility(View.INVISIBLE);
 
             File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+
+            String[] tempText = pictureFile.toString().split("/");
+            idPhoto.setText(tempText[6]);
+
+
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100 , bos);
             byte[] bitmapdata = bos.toByteArray();
