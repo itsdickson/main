@@ -157,10 +157,10 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v) {
                 mPreview.setVisibility(View.INVISIBLE);
                 capturedImage.setVisibility(View.INVISIBLE);
-                if (mAuth.getCurrentUser() != null && tempFile != null) {
-                    mProgressDialog.setMessage("Uploading...");
-                    mProgressDialog.show();
-                    Uri file = Uri.fromFile(tempFile);
+                mProgressDialog.setMessage("Uploading...");
+                mProgressDialog.show();
+                Uri file = Uri.fromFile(tempFile);
+                if (mAuth.getCurrentUser() != null) {
                     String userDetails = mAuth.getCurrentUser().getEmail();
                     StorageReference filepath = mStorage.child(userDetails).child(file.getLastPathSegment());
                     filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -170,7 +170,6 @@ public class MainActivity extends AppCompatActivity
                             mProgressDialog.dismiss();
                         }
                     });
-                    tempFile = null;
                 }
             }
         });
