@@ -129,12 +129,14 @@ public class MainActivity extends AppCompatActivity
                 if (!isCameraActivated) {
                     Log.i("LOG", "Camera activating...");
                     activateCamera();
-                } else {
-                    if (!isCameraTurnedOn) {
-                        Log.i("LOG", "Turning on Camera...");
-                        turnCamera();
-                    }
                 }
+
+                if (!isCameraTurnedOn) {
+                    Log.i("LOG", "Turning on Camera...");
+                    turnCamera();
+                }
+                flag = 0;
+                idPhoto.setText("");
             }
         });
 
@@ -142,6 +144,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 if (isCameraTurnedOn) {
+                    Log.i("LOG", "Focusing Camera...");
                     focusCamera();
                     flag = 1;
                 }
@@ -168,7 +171,10 @@ public class MainActivity extends AppCompatActivity
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
                                 mProgressDialog.dismiss();
+                                idPhoto.setText("");
                                 flag = 0;
+                                isCameraActivated = false;
+                                isCameraTurnedOn = false;
                             }
                         });
                     }
@@ -287,6 +293,7 @@ public class MainActivity extends AppCompatActivity
 
     private void turnCamera() {
         mPreview.setVisibility(View.VISIBLE);
+        capturedImage.setVisibility(View.INVISIBLE);
         isCameraTurnedOn = true;
     }
 
@@ -366,6 +373,10 @@ public class MainActivity extends AppCompatActivity
                 if (success) {
                     mCamera.takePicture(null, null, mPicture);
                     Log.i("Log", "Photo Taken!");
+                    isCameraTurnedOn = false;
+                } else {
+                    focusCamera();
+                    Log.i("Log", "Retaking Photo...");
                 }
             }
         });
