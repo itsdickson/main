@@ -61,11 +61,13 @@ public class MainActivity extends AppCompatActivity
     static FirebaseAuth mAuth;
     private StorageReference mStorage;
     private ProgressDialog mProgressDialog;
+    private boolean isCameraActivated;
+    private boolean isCameraTurnedOn;
 
     public static final int REQUEST_ENABLE_BT = 1;
     public static final int MEDIA_TYPE_IMAGE = 1;
 
-    public static File tempFile;
+    public static File tempFile = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,6 +75,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        isCameraActivated = false;
+        isCameraTurnedOn = false;
 
         mProgressDialog = new ProgressDialog(this);
         mStorage = FirebaseStorage.getInstance().getReference();
@@ -84,15 +89,15 @@ public class MainActivity extends AppCompatActivity
         Button sendBtn = (Button) findViewById(R.id.sendBtn);
         TextView idPhoto = (TextView) findViewById(R.id.idPhoto);
 
-        // Create an instance of Camera
-        mCamera = getCameraInstance();
-
-        // Create our Preview view and set it as the content of our activity
-        mPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.cameraPreview);
-        preview.addView(mPreview);
-        preview.setVisibility(View.VISIBLE);
-        mPreview.setVisibility(View.INVISIBLE);
+//        // Create an instance of Camera
+//        mCamera = getCameraInstance();
+//
+//        // Create our Preview view and set it as the content of our activity
+//        mPreview = new CameraPreview(this, mCamera);
+//        FrameLayout preview = (FrameLayout) findViewById(R.id.cameraPreview);
+//        preview.addView(mPreview);
+//        preview.setVisibility(View.VISIBLE);
+//        mPreview.setVisibility(View.INVISIBLE);
 
         // Initialisation of displayed image
         capturedImage = (ImageView) findViewById(R.id.imageCaptured);
@@ -112,7 +117,7 @@ public class MainActivity extends AppCompatActivity
 
         if (mBluetoothAdapter == null) {
             // Checks if device supports Bluetooth
-            Log.i("info:", "Bluetooth not supported");
+            Log.i("Log:", "Bluetooth not supported");
         } else {
             // Checks if device is currently paired with other devices
             if (!mBluetoothAdapter.isEnabled()) {
@@ -126,14 +131,26 @@ public class MainActivity extends AppCompatActivity
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activateCamera();
+                System.out.println(isCameraActivated);
+                System.out.println("button clicked");
+                if (!isCameraActivated) {
+                    Log.i("LOG", "Camera activating...");
+                    activateCamera();
+                } else {
+                    if (!isCameraTurnedOn) {
+                        Log.i("LOG", "Turning on Camera...");
+                        turnCamera();
+                    }
+                }
             }
         });
 
         focusBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                focusCamera();
+                if (isCameraTurnedOn) {
+                    focusCamera();
+                }
 //                mCamera.takePicture(null, null, mPicture);
             }
         });
@@ -143,10 +160,10 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View v) {
                 mPreview.setVisibility(View.INVISIBLE);
                 capturedImage.setVisibility(View.INVISIBLE);
-                mProgressDialog.setMessage("Uploading...");
-                mProgressDialog.show();
-                Uri file = Uri.fromFile(tempFile);
-                if (mAuth.getCurrentUser() != null) {
+                if (mAuth.getCurrentUser() != null && tempFile != null) {
+                    mProgressDialog.setMessage("Uploading...");
+                    mProgressDialog.show();
+                    Uri file = Uri.fromFile(tempFile);
                     String userDetails = mAuth.getCurrentUser().getEmail();
                     StorageReference filepath = mStorage.child(userDetails).child(file.getLastPathSegment());
                     filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
@@ -156,6 +173,7 @@ public class MainActivity extends AppCompatActivity
                             mProgressDialog.dismiss();
                         }
                     });
+                    tempFile = null;
                 }
             }
         });
@@ -164,11 +182,17 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
+        if (!isCameraActivated) {
+            Log.i("LOG", "Activating Camera: onResume");
+            activateCamera();
+        }
+        mPreview.setVisibility(View.INVISIBLE);
     }
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+        releaseCamera();
+//        super.onBackPressed();
         Intent homeIntent = new Intent(Intent.ACTION_MAIN);
         homeIntent.addCategory(Intent.CATEGORY_HOME);
         homeIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -250,10 +274,24 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void activateCamera() {
-        Log.i("Info", "Camera Activated");
-        mPreview.setVisibility(View.VISIBLE);
+    private void activateCamera() {
+        Log.i("Log", "Camera Activated");
+        // Create an instance of Camera
+        mCamera = getCameraInstance();
+
+        // Create our Preview view and set it as the content of our activity
+        mPreview = new CameraPreview(this, mCamera);
+        FrameLayout preview = (FrameLayout) findViewById(R.id.cameraPreview);
+        preview.addView(mPreview);
+        preview.setVisibility(View.VISIBLE);
+        mPreview.setVisibility(View.INVISIBLE);
         capturedImage.setVisibility(View.INVISIBLE);
+        isCameraActivated = true;
+    }
+
+    private void turnCamera() {
+        mPreview.setVisibility(View.VISIBLE);
+        isCameraTurnedOn = true;
     }
 
     private void releaseCamera() {
@@ -261,6 +299,9 @@ public class MainActivity extends AppCompatActivity
             Log.i("Log", "Camera Released");
             mCamera.release();        // release the camera for other applications
         }
+        mPreview.setVisibility(View.INVISIBLE);
+        isCameraActivated = false;
+        isCameraTurnedOn = false;
     }
 
     /** A safe way to get an instance of the Camera object */
@@ -323,7 +364,7 @@ public class MainActivity extends AppCompatActivity
             public void onAutoFocus(boolean success, Camera camera) {
                 if (success) {
                     mCamera.takePicture(null, null, mPicture);
-                    Log.i("Info", "Photo Taken!");
+                    Log.i("Log", "Photo Taken!");
                 }
             }
         });
