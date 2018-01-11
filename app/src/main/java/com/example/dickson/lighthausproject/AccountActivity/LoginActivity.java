@@ -31,7 +31,7 @@ import com.google.firebase.auth.FirebaseUser;
  */
 
 public class LoginActivity extends AppCompatActivity {
-    private FirebaseAuth mAuth;
+    static FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private EditText editEmail, editPass;
     private Button signUp, signIn;
@@ -55,12 +55,6 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        mAuth = FirebaseAuth.getInstance();
-                if(mAuth != null) {
-                    Log.i("Log", "User is Logged in");
-                    Intent i = new Intent(this, MainActivity.class);
-                    startActivity(i);
-                }
     }
 
     @Override
