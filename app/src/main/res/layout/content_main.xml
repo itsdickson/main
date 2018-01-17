@@ -28,7 +28,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginEnd="50dp"
         android:layout_marginTop="10dp"
-        android:text="focus"
+        android:text="Focus"
         tools:layout_editor_absoluteX="16dp"
         tools:layout_editor_absoluteY="124dp" />
 
@@ -54,17 +54,22 @@
         android:id="@+id/sendBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="Send"
         android:layout_above="@+id/idPhoto"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="true" />
+        android:layout_marginBottom="16dp"
+        android:text="send" />
 
-    <TextView
+    <EditText
         android:id="@+id/idPhoto"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:paddingStart="10dp" />
+        android:layout_alignParentStart="true"
+        android:ems="10"
+        android:hint="Enter name"
+        android:inputType="textPersonName"
+        android:textAppearance="@style/TextAppearance.AppCompat"
+        android:textSize="12sp" />
 
 </RelativeLayout>

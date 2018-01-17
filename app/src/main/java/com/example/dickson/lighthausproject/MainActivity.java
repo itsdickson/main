@@ -24,9 +24,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.dickson.lighthausproject.AccountActivity.LoginActivity;
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity
     private Camera mCamera;
     private CameraPreview mPreview;
     private ImageView capturedImage;
-    private TextView idPhoto;
+    private EditText idPhoto;
     static FirebaseAuth mAuth;
     private StorageReference mStorage;
     private ProgressDialog mProgressDialog;
@@ -101,7 +101,8 @@ public class MainActivity extends AppCompatActivity
         // Initialisation of displayed image
         capturedImage = (ImageView) findViewById(R.id.imageCaptured);
         capturedImage.setVisibility(View.INVISIBLE);
-        idPhoto = (TextView) findViewById(R.id.idPhoto);
+        idPhoto = (EditText) findViewById(R.id.idPhoto);
+        idPhoto.setVisibility(View.INVISIBLE);
 
         capturedImage.setImageResource(R.drawable.ic_menu_camera);
 
@@ -136,7 +137,6 @@ public class MainActivity extends AppCompatActivity
                     turnCamera();
                 }
                 flag = 0;
-                idPhoto.setText("");
             }
         });
 
@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
                                 mProgressDialog.dismiss();
-                                idPhoto.setText("");
+                                idPhoto.setVisibility(View.INVISIBLE);
                                 flag = 0;
                                 isCameraActivated = false;
                                 isCameraTurnedOn = false;
@@ -336,8 +336,8 @@ public class MainActivity extends AppCompatActivity
 
             File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
 
-            String[] tempText = pictureFile.toString().split("/");
-            idPhoto.setText(tempText[6]);
+
+            idPhoto.setVisibility(View.VISIBLE);
 
 
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
