@@ -2,8 +2,11 @@ package com.example.dickson.lighthausproject.AccountActivity;
 
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.text.method.PasswordTransformationMethod;
@@ -16,6 +19,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.dickson.lighthausproject.MainActivity;
+import com.example.dickson.lighthausproject.Manifest;
 import com.example.dickson.lighthausproject.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -38,6 +42,9 @@ public class LoginActivity extends AppCompatActivity {
     private CheckBox visibility;
     private ProgressDialog mProgressDialog;
 
+    private static final int PERMISSION_REQUEST_CAMERA = 0;
+    private static final int PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 0;
+
     @Override
     public void onStart() {
         super.onStart();
@@ -55,12 +62,59 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+
+        //Checks for external storage permissions after resuming from Camera Permissions Grant
+
+        if (ContextCompat.checkSelfPermission(LoginActivity.this,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(LoginActivity.this,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE)) {
+
+                // Show an explanation to the user *asynchronously* — don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(LoginActivity.this,
+                        new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                        PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+
+            }
+        }
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        if (ContextCompat.checkSelfPermission(LoginActivity.this,
+                android.Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(LoginActivity.this,
+                    android.Manifest.permission.CAMERA)) {
+
+                // Show an explanation to the user *asynchronously* — don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(LoginActivity.this,
+                        new String[]{android.Manifest.permission.CAMERA},
+                        PERMISSION_REQUEST_CAMERA);
+            }
+        }
 
         editEmail = (EditText) findViewById(R.id.etEmail);
         editPass = (EditText) findViewById(R.id.etPassword);
