@@ -165,7 +165,7 @@ public class MainActivity extends AppCompatActivity
                     Uri file = Uri.fromFile(tempFile);
                     if (mAuth.getCurrentUser() != null) {
                         String userDetails = mAuth.getCurrentUser().getEmail();
-                        StorageReference filepath = mStorage.child(userDetails).child(file.getLastPathSegment());
+                        StorageReference filepath = mStorage.child(userDetails).child(idPhoto.getText().toString());
                         filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -335,8 +335,6 @@ public class MainActivity extends AppCompatActivity
             mPreview.setVisibility(View.INVISIBLE);
 
             File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-
-
             idPhoto.setVisibility(View.VISIBLE);
 
 
@@ -344,7 +342,10 @@ public class MainActivity extends AppCompatActivity
             rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100 , bos);
             byte[] bitmapdata = bos.toByteArray();
 
+            
             tempFile = pictureFile;
+
+
             scanMedia(pictureFile);
             if (pictureFile == null){
                 Log.d("Debug", "Error creating media file, check storage permissions");
