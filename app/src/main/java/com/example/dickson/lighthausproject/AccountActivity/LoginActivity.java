@@ -19,7 +19,6 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.dickson.lighthausproject.MainActivity;
-import com.example.dickson.lighthausproject.Manifest;
 import com.example.dickson.lighthausproject.R;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -34,7 +33,7 @@ import com.google.firebase.auth.FirebaseUser;
  * Created by Junyang on 14/12/2017.
  */
 
-public class LoginActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity implements ActivityCompat.OnRequestPermissionsResultCallback {
     static FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     private EditText editEmail, editPass;
@@ -43,7 +42,7 @@ public class LoginActivity extends AppCompatActivity {
     private ProgressDialog mProgressDialog;
 
     private static final int PERMISSION_REQUEST_CAMERA = 0;
-    private static final int PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 0;
+    private static final int PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
 
     @Override
     public void onStart() {
@@ -90,6 +89,40 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_CAMERA: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+
+                    ActivityCompat.requestPermissions(LoginActivity.this,
+                            new String[]{android.Manifest.permission.CAMERA},
+                            PERMISSION_REQUEST_CAMERA);
+                }
+                return;
+            }
+            case PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.GET_PERMISSIONS) {
+
+                } else {
+                    ActivityCompat.requestPermissions(LoginActivity.this,
+                            new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
+                            PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
+                }
+            }
+        }
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
@@ -115,6 +148,7 @@ public class LoginActivity extends AppCompatActivity {
                         PERMISSION_REQUEST_CAMERA);
             }
         }
+
 
         editEmail = (EditText) findViewById(R.id.etEmail);
         editPass = (EditText) findViewById(R.id.etPassword);
