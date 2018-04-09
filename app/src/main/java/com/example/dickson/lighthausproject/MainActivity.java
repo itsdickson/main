@@ -3,8 +3,10 @@ package com.example.dickson.lighthausproject;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -12,6 +14,7 @@ import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
@@ -65,6 +68,7 @@ public class MainActivity extends AppCompatActivity
 
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static int flag = 0;
+    public static final int PICK_IMAGE = 1;
 
     public static File tempFile = null;
 
@@ -119,7 +123,7 @@ public class MainActivity extends AppCompatActivity
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivity(enableBtIntent);
         }
-        
+
         checkPairedStatus();
 
         startBtn.setOnClickListener(new View.OnClickListener() {
@@ -215,6 +219,7 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            openBluetoothSettings();
             return true;
         }
 
@@ -236,9 +241,9 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_camera) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setType("image/*");
-            startActivity(intent);
+            Intent galleryIntent = new Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            galleryIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(galleryIntent);
 
         } else if (id == R.id.nav_signOut) {
             mAuth.getInstance().signOut();
@@ -250,6 +255,12 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void openBluetoothSettings() {
+        Intent intentOpenBluetoothSettings = new Intent();
+        intentOpenBluetoothSettings.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
+        startActivity(intentOpenBluetoothSettings);
     }
 
     public void checkPairedStatus() {

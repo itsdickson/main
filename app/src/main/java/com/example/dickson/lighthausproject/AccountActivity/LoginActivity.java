@@ -98,13 +98,12 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
                 } else {
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-
+                    Toast.makeText(getApplicationContext(), "Please enable permissions to proceed", Toast.LENGTH_SHORT).show();
+                    Log.i("LOG", "Camera Permissions Denied");
                     ActivityCompat.requestPermissions(LoginActivity.this,
                             new String[]{android.Manifest.permission.CAMERA},
                             PERMISSION_REQUEST_CAMERA);
+
                 }
                 return;
             }
@@ -112,6 +111,8 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.GET_PERMISSIONS) {
 
                 } else {
+                    Toast.makeText(getApplicationContext(), "Please enable permissions to proceed", Toast.LENGTH_SHORT).show();
+                    Log.i("LOG", "Storage Permissions Denied");
                     ActivityCompat.requestPermissions(LoginActivity.this,
                             new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
                             PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
