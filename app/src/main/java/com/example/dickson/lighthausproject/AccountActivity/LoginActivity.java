@@ -62,7 +62,23 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
     protected void onResume() {
         super.onResume();
 
-        //Checks for external storage permissions after resuming from Camera Permissions Grant
+        if (ContextCompat.checkSelfPermission(LoginActivity.this,
+                android.Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Should we show an explanation?
+            if (ActivityCompat.shouldShowRequestPermissionRationale(LoginActivity.this,
+                    android.Manifest.permission.CAMERA)) {
+
+            } else {
+
+                // No explanation needed, we can request the permission.
+
+                ActivityCompat.requestPermissions(LoginActivity.this,
+                        new String[]{android.Manifest.permission.CAMERA},
+                        PERMISSION_REQUEST_CAMERA);
+            }
+        }
 
         if (ContextCompat.checkSelfPermission(LoginActivity.this,
                 android.Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -89,38 +105,8 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSION_REQUEST_CAMERA: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                } else {
-                    Toast.makeText(getApplicationContext(), "Please enable permissions to proceed", Toast.LENGTH_SHORT).show();
-                    Log.i("LOG", "Camera Permissions Denied");
-                    ActivityCompat.requestPermissions(LoginActivity.this,
-                            new String[]{android.Manifest.permission.CAMERA},
-                            PERMISSION_REQUEST_CAMERA);
-
-                }
-                return;
-            }
-            case PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.GET_PERMISSIONS) {
-
-                } else {
-                    Toast.makeText(getApplicationContext(), "Please enable permissions to proceed", Toast.LENGTH_SHORT).show();
-                    Log.i("LOG", "Storage Permissions Denied");
-                    ActivityCompat.requestPermissions(LoginActivity.this,
-                            new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE},
-                            PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE);
-                }
-            }
-        }
-        // other 'case' lines to check for other
-        // permissions this app might request.
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override
@@ -136,10 +122,6 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
             if (ActivityCompat.shouldShowRequestPermissionRationale(LoginActivity.this,
                     android.Manifest.permission.CAMERA)) {
 
-                // Show an explanation to the user *asynchronously* — don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-
             } else {
 
                 // No explanation needed, we can request the permission.
@@ -148,6 +130,7 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
                         new String[]{android.Manifest.permission.CAMERA},
                         PERMISSION_REQUEST_CAMERA);
             }
+
         }
 
 
