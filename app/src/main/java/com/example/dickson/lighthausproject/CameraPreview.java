@@ -7,6 +7,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static android.content.ContentValues.TAG;
@@ -18,6 +19,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     private Camera mCamera;
     private Camera.Size mPreviewSize;
     private List<Camera.Size> mSupportedPreviewSizes;
+    private ArrayList<Integer> mWidthHeight = new ArrayList<>();
 
     public CameraPreview(Context context, Camera camera) {
         super(context);
@@ -39,8 +41,11 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
         setMeasuredDimension(width, height);
 
+        Log.i("LOG", "OnMeasure Entered");
+
         if (mSupportedPreviewSizes != null) {
-            mPreviewSize = getOptimalPreviewSize(mSupportedPreviewSizes, width, height);
+            mWidthHeight.add(0, width);
+            mWidthHeight.add(1, height);
         }
     }
 
@@ -51,6 +56,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
             mCamera.setDisplayOrientation(90);
 
             Camera.Parameters params = mCamera.getParameters();
+            mPreviewSize = getOptimalPreviewSize(mWidthHeight.get(0) , mWidthHeight.get(1), params);
+            System.out.println("test: " + mPreviewSize.width + " " + mPreviewSize.height);
             params.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
             if (params.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
                 Log.i("Info", "AUTO ACTIVATED");
@@ -60,6 +67,8 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
                 params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
             }
             mCamera.setParameters(params);
+            System.out.println("test2" + mCamera.getParameters().getPreviewSize().width + " " +
+                    mCamera.getParameters().getPreviewSize().height);
 
             mCamera.startPreview();
         } catch (IOException e) {
@@ -109,35 +118,61 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
         }
     };
 
-    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
-        final double ASPECT_TOLERANCE = 0.1;
-        double targetRatio=(double)h / w;
+//    private Camera.Size getOptimalPreviewSize(List<Camera.Size> sizes, int w, int h) {
+//        final double ASPECT_TOLERANCE = 0.1;
+//        double targetRatio=(double)h / w;
+//
+//        if (sizes == null) return null;
+//
+//        Camera.Size optimalSize = null;
+//        double minDiff = Double.MAX_VALUE;
+//
+//        int targetHeight = h;
+//
+//        for (Camera.Size size : sizes) {
+//            double ratio = (double) size.width / size.height;
+//            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
+//            if (Math.abs(size.height - targetHeight) < minDiff) {
+//                optimalSize = size;
+//                minDiff = Math.abs(size.height - targetHeight);
+//            }
+//        }
+//
+//        if (optimalSize == null) {
+//            minDiff = Double.MAX_VALUE;
+//            for (Camera.Size size : sizes) {
+//                if (Math.abs(size.height - targetHeight) < minDiff) {
+//                    optimalSize = size;
+//                    minDiff = Math.abs(size.height - targetHeight);
+//                }
+//            }
+//        }
+//        return optimalSize;
+//    }
 
-        if (sizes == null) return null;
+    private Camera.Size getOptimalPreviewSize(int width, int height,
+                                           Camera.Parameters parameters) {
+        Camera.Size result=null;
 
-        Camera.Size optimalSize = null;
-        double minDiff = Double.MAX_VALUE;
+        System.out.println("pictureSize: " + parameters.getSupportedPictureSizes());
+        for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
+            System.out.println("params: " + size.width + " " + size.height);
+            System.out.println("pictureSize: " + parameters.getSupportedPictureSizes());
+            if (size.width <= width && size.height <= height) {
+                if (result == null) {
+                    result=size;
+                }
+                else {
+                    int resultArea=result.width * result.height;
+                    int newArea=size.width * size.height;
 
-        int targetHeight = h;
-
-        for (Camera.Size size : sizes) {
-            double ratio = (double) size.width / size.height;
-            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-            if (Math.abs(size.height - targetHeight) < minDiff) {
-                optimalSize = size;
-                minDiff = Math.abs(size.height - targetHeight);
-            }
-        }
-
-        if (optimalSize == null) {
-            minDiff = Double.MAX_VALUE;
-            for (Camera.Size size : sizes) {
-                if (Math.abs(size.height - targetHeight) < minDiff) {
-                    optimalSize = size;
-                    minDiff = Math.abs(size.height - targetHeight);
+                    if (newArea > resultArea) {
+                        result=size;
+                    }
                 }
             }
         }
-        return optimalSize;
+
+        return(result);
     }
 }

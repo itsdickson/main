@@ -3,7 +3,8 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://C:\Users\ju-ny\Documents\main-1\lighthaus.iml" filepath="C:\Users\ju-ny\Documents\main-1\lighthaus.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lighthaus.iml" filepath="$PROJECT_DIR$/lighthaus.iml" />
+      <module fileurl="file://C:/Users/ju-ny/Documents/main-1/lighthaus.iml" filepath="C:/Users/ju-ny/Documents/main-1/lighthaus.iml" />
       <module fileurl="file://$PROJECT_DIR$/main-1.iml" filepath="$PROJECT_DIR$/main-1.iml" />
     </modules>
   </component>
