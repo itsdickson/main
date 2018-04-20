@@ -70,7 +70,6 @@ public class MainActivity extends AppCompatActivity
 
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static int flag = 0;
-    public static final int PICK_IMAGE = 1;
 
     public static File tempFile = null;
 
@@ -97,17 +96,6 @@ public class MainActivity extends AppCompatActivity
         mPreviewHolder = mPreview.getHolder();
         mPreviewHolder.addCallback(surfaceCallback);
         mPreviewHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-
-//        // Create an instance of Camera
-//        mCamera = getCameraInstance();
-//
-//        // Create our Preview view and set it as the content of our activity
-//        mPreview = new CameraPreview(this, mCamera);
-//        FrameLayout preview = (FrameLayout) findViewById(R.id.cameraPreview);
-//        preview.addView(mPreview);
-//        preview.setVisibility(View.VISIBLE);
-//        mPreview.setVisibility(View.INVISIBLE);
-
 
         // Initialisation of displayed image
         capturedImage = (ImageView) findViewById(R.id.imageCaptured);
@@ -136,8 +124,6 @@ public class MainActivity extends AppCompatActivity
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                System.out.println(isCameraActivated);
-                System.out.println("button clicked");
                 if (!isCameraActivated) {
                     Log.i("LOG", "Camera activating...");
                     activateCamera();
@@ -148,10 +134,6 @@ public class MainActivity extends AppCompatActivity
                     turnCamera();
                 }
                 flag = 0;
-                System.out.println("hey1 " + mPreview.getHeight() + " " + mPreview.getWidth());
-//                FrameLayout test = (FrameLayout) findViewById(R.id.cameraPreview);
-//                System.out.println("hey3: " + test.getWidth() + " " + test.getHeight());
-//                System.out.println("hey4: " + mPreview.getWidth() + " " + mPreview.getHeight());
             }
         });
 
@@ -211,31 +193,6 @@ public class MainActivity extends AppCompatActivity
         }
         mPreview.setVisibility(View.INVISIBLE);
     }
-
-//    @Override
-//    public void onRestart() {
-//        super.onRestart();
-//        Log.i("LOG", "Restart!");
-////        releaseCamera();
-//        if (!isCameraActivated) {
-//            Log.i("LOG", "Activating Camera: onRestart");
-//            activateCamera();
-//        }
-//        mPreview.setVisibility(View.INVISIBLE);
-//    }
-
-//    @Override
-//    public void onBackPressed() {
-//        releaseCamera();
-//        moveTaskToBack(true);
-//    }
-//
-//    @Override
-//    public void onStop() {
-//        super.onStop();
-//        releaseCamera();
-//        moveTaskToBack(true);
-//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -329,17 +286,7 @@ public class MainActivity extends AppCompatActivity
 
     private void activateCamera() {
         Log.i("Log", "Camera Activated");
-        // Create an instance of Camera
-//        mCamera = getCameraInstance();
 
-        // Create our Preview view and set it as the content of our activity
-//        FrameLayout preview = (FrameLayout) findViewById(R.id.cameraPreview);
-//        System.out.println("hey: " + mCamera.getParameters().getPreviewSize().width + " " +
-//                mCamera.getParameters().getPreviewSize().height);
-//        preview.setLayoutParams(new RelativeLayout.LayoutParams(mPreview.getHeight(), mPreview.getWidth()));
-//        preview.addView(mPreview);
-//        System.out.println("hey2: " + preview.getLayoutParams().height + " " + preview.getLayoutParams().width);
-//        preview.setVisibility(View.VISIBLE);
         mPreview.setVisibility(View.INVISIBLE);
         capturedImage.setVisibility(View.INVISIBLE);
         mCamera = getCameraInstance();
@@ -387,7 +334,6 @@ public class MainActivity extends AppCompatActivity
             Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
             capturedImage.setImageBitmap(rotatedBitmap);
             capturedImage.setVisibility(View.VISIBLE);
-            System.out.println("hey5: " + capturedImage.getHeight() + " " + capturedImage.getWidth());
             System.out.println("hey6: " + bitmap.getHeight() + " " + bitmap.getWidth());
             mPreview.setVisibility(View.INVISIBLE);
 
@@ -443,19 +389,6 @@ public class MainActivity extends AppCompatActivity
         Intent scanFileIntent = new Intent(
                 Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, uri);
         sendBroadcast(scanFileIntent);
-    }
-
-    private Bitmap scaleDownBitmapImage(Bitmap bitmap, int newWidth, int newHeight){
-        Matrix matrix = new Matrix();
-        matrix.postRotate(90);
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true);
-        Bitmap rotatedBitmap = Bitmap.createBitmap(resizedBitmap, 0, 0, newWidth, newHeight, matrix, true);
-        return rotatedBitmap;
-    }
-
-    /** Create a file Uri for saving an image or video */
-    private static Uri getOutputMediaFileUri(int type){
-        return Uri.fromFile(getOutputMediaFile(type));
     }
 
     /** Create a File for saving an image or video */
@@ -531,29 +464,6 @@ public class MainActivity extends AppCompatActivity
             // empty. Take care of releasing the Camera preview in your activity.
         }
     };
-//    @Override
-//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//        final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
-//        final int height = resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec);
-//
-//        setMeasuredDimension(width, height);
-//
-//        Log.i("LOG", "OnMeasure Entered");
-//
-//        if (mSupportedPreviewSizes != null) {
-//            mWidthHeight.add(0, width);
-//            mWidthHeight.add(1, height);
-//        }
-//    }
-
-    Camera.AutoFocusCallback myAutoFocusCallback = new Camera.AutoFocusCallback() {
-        @Override
-        public void onAutoFocus(boolean success, Camera camera) {
-            if (success) {
-                mCamera.cancelAutoFocus();
-            }
-        }
-    };
 
     private void initPreview(int width, int height) {
         if (mCamera != null && mPreviewHolder.getSurface() != null) {
@@ -568,6 +478,7 @@ public class MainActivity extends AppCompatActivity
                 Camera.Size size = getOptimalPreviewSize(width, height, parameters);
 
                 if (size != null) {
+                    System.out.println("test : " + size.width + " " + size.height);
                     parameters.setPreviewSize(size.width, size.height);
                     if (parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
                         Log.i("Info", "AUTO ACTIVATED");
@@ -581,13 +492,12 @@ public class MainActivity extends AppCompatActivity
                     System.out.println("size:" + size.width + " " + size.height + " " + ratio);
 
                     int displayWidth = getWindowManager().getDefaultDisplay().getWidth();
-                    System.out.println("size:" + (displayWidth*ratio) + " " + (displayWidth) );
-                    System.out.println("displayWidth  = " + displayWidth);
+                    System.out.println("size:" + (int)(displayWidth*ratio) + " " + (displayWidth) );
 
                     RelativeLayout.LayoutParams testLayout = new RelativeLayout.LayoutParams(displayWidth, (int)(displayWidth*ratio));
                     testLayout.addRule(RelativeLayout.CENTER_HORIZONTAL);
                     testLayout.addRule(RelativeLayout.CENTER_VERTICAL);
-
+//
                     mPreview.setLayoutParams(testLayout);
                     System.out.println("hey3: " + mPreview.getLayoutParams().width + " " + mPreview.getLayoutParams().height);
                     isCameraConfigured = true;
@@ -596,52 +506,11 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-//    private Camera.Size getOptimalPreviewSize(int w, int h) {
-//        final double ASPECT_TOLERANCE = 0.1;
-//        double targetRatio=(double)h / w;
-//
-//        List<Camera.Size> sizes = mCamera.getParameters().getSupportedPreviewSizes();
-//
-//        if (sizes == null) return null;
-//
-//        Camera.Size optimalSize = null;
-//        double minDiff = Double.MAX_VALUE;
-//
-//        int targetHeight = h;
-//
-//        for (Camera.Size size : sizes) {
-//            double ratio = (double) size.width / size.height;
-//            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
-//            if (Math.abs(size.height - targetHeight) < minDiff) {
-//                optimalSize = size;
-//                minDiff = Math.abs(size.height - targetHeight);
-//            }
-//        }
-//
-//        if (optimalSize == null) {
-//            minDiff = Double.MAX_VALUE;
-//            for (Camera.Size size : sizes) {
-//                if (Math.abs(size.height - targetHeight) < minDiff) {
-//                    optimalSize = size;
-//                    minDiff = Math.abs(size.height - targetHeight);
-//                }
-//            }
-//        }
-//
-//        System.out.println("result: " + optimalSize.width + " " + optimalSize.height);
-//        return optimalSize;
-//    }
-
     private Camera.Size getOptimalPreviewSize(int width, int height,
                                               Camera.Parameters parameters) {
         Camera.Size result=null;
 
-        for (Camera.Size size : parameters.getSupportedPictureSizes()) {
-            System.out.println("picture: " + size.width + " " + size.height);
-        }
-
         for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
-            System.out.println("picture2: " + size.width + " " + size.height);
             if (size.width <= width && size.height <= height) {
                 if (result == null) {
                     result=size;
