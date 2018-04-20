@@ -12,8 +12,11 @@ import android.hardware.Camera;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -25,8 +28,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.example.dickson.lighthausproject.AccountActivity.LoginActivity;
@@ -46,15 +49,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
-
+import static android.content.ContentValues.TAG;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
-    private Camera mCamera;
-    private CameraPreview mPreview;
+    private Camera mCamera = null;
+    private SurfaceView mPreview = null;
+    private SurfaceHolder mPreviewHolder = null;
     private ImageView capturedImage;
     private EditText idPhoto;
     static FirebaseAuth mAuth;
@@ -62,9 +66,11 @@ public class MainActivity extends AppCompatActivity
     private ProgressDialog mProgressDialog;
     private boolean isCameraActivated;
     private boolean isCameraTurnedOn;
+    private boolean isCameraConfigured = false;
 
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static int flag = 0;
+    public static final int PICK_IMAGE = 1;
 
     public static File tempFile = null;
 
@@ -86,6 +92,11 @@ public class MainActivity extends AppCompatActivity
         Button startBtn = (Button) findViewById(R.id.startBtn);
         Button focusBtn = (Button) findViewById(R.id.focusBtn);
         Button sendBtn = (Button) findViewById(R.id.sendBtn);
+
+        mPreview = (SurfaceView) findViewById(R.id.cameraPreview);
+        mPreviewHolder = mPreview.getHolder();
+        mPreviewHolder.addCallback(surfaceCallback);
+        mPreviewHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
 //        // Create an instance of Camera
 //        mCamera = getCameraInstance();
@@ -119,7 +130,7 @@ public class MainActivity extends AppCompatActivity
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivity(enableBtIntent);
         }
-        
+
         checkPairedStatus();
 
         startBtn.setOnClickListener(new View.OnClickListener() {
@@ -137,6 +148,10 @@ public class MainActivity extends AppCompatActivity
                     turnCamera();
                 }
                 flag = 0;
+                System.out.println("hey1 " + mPreview.getHeight() + " " + mPreview.getWidth());
+//                FrameLayout test = (FrameLayout) findViewById(R.id.cameraPreview);
+//                System.out.println("hey3: " + test.getWidth() + " " + test.getHeight());
+//                System.out.println("hey4: " + mPreview.getWidth() + " " + mPreview.getHeight());
             }
         });
 
@@ -146,37 +161,41 @@ public class MainActivity extends AppCompatActivity
                 if (isCameraTurnedOn) {
                     Log.i("LOG", "Focusing Camera...");
                     focusCamera();
+//                    mCamera.takePicture(null, null, mPicture);
                     flag = 1;
                 }
-//                mCamera.takePicture(null, null, mPicture);
             }
         });
 
         sendBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (flag == 0) {
-                    Toast.makeText(MainActivity.this, "No Image Captured", Toast.LENGTH_SHORT).show();
+                if (idPhoto.getText().toString().isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Please input photo id", Toast.LENGTH_SHORT).show();
                 } else {
-                    mPreview.setVisibility(View.INVISIBLE);
-                    capturedImage.setVisibility(View.INVISIBLE);
-                    mProgressDialog.setMessage("Uploading...");
-                    mProgressDialog.show();
-                    Uri file = Uri.fromFile(tempFile);
-                    if (mAuth.getCurrentUser() != null) {
-                        String userDetails = mAuth.getCurrentUser().getEmail();
-                        StorageReference filepath = mStorage.child(userDetails).child(idPhoto.getText().toString());
-                        filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                            @Override
-                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
-                                mProgressDialog.dismiss();
-                                idPhoto.setVisibility(View.INVISIBLE);
-                                flag = 0;
-                                isCameraActivated = false;
-                                isCameraTurnedOn = false;
-                            }
-                        });
+                    if (flag == 0) {
+                        Toast.makeText(MainActivity.this, "No Image Captured", Toast.LENGTH_SHORT).show();
+                    } else {
+                        mPreview.setVisibility(View.INVISIBLE);
+                        capturedImage.setVisibility(View.INVISIBLE);
+                        mProgressDialog.setMessage("Uploading...");
+                        mProgressDialog.show();
+                        Uri file = Uri.fromFile(tempFile);
+                        if (mAuth.getCurrentUser() != null) {
+                            String userDetails = mAuth.getCurrentUser().getEmail();
+                            StorageReference filepath = mStorage.child(userDetails).child(idPhoto.getText().toString());
+                            filepath.putFile(file).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                @Override
+                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                    Toast.makeText(MainActivity.this, "Upload Done!", Toast.LENGTH_SHORT).show();
+                                    mProgressDialog.dismiss();
+                                    idPhoto.setVisibility(View.INVISIBLE);
+                                    flag = 0;
+                                    isCameraActivated = false;
+                                    isCameraTurnedOn = false;
+                                }
+                            });
+                        }
                     }
                 }
             }
@@ -193,11 +212,30 @@ public class MainActivity extends AppCompatActivity
         mPreview.setVisibility(View.INVISIBLE);
     }
 
-    @Override
-    public void onBackPressed() {
-        releaseCamera();
-        moveTaskToBack(true);
-    }
+//    @Override
+//    public void onRestart() {
+//        super.onRestart();
+//        Log.i("LOG", "Restart!");
+////        releaseCamera();
+//        if (!isCameraActivated) {
+//            Log.i("LOG", "Activating Camera: onRestart");
+//            activateCamera();
+//        }
+//        mPreview.setVisibility(View.INVISIBLE);
+//    }
+
+//    @Override
+//    public void onBackPressed() {
+//        releaseCamera();
+//        moveTaskToBack(true);
+//    }
+//
+//    @Override
+//    public void onStop() {
+//        super.onStop();
+//        releaseCamera();
+//        moveTaskToBack(true);
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -215,6 +253,7 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            openBluetoothSettings();
             return true;
         }
 
@@ -223,8 +262,14 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onPause() {
-        super.onPause();
+        if (isCameraTurnedOn) {
+            mCamera.stopPreview();
+        }
         releaseCamera();              // release the camera immediately on pause event
+        mCamera = null;
+        isCameraTurnedOn = false;
+
+        super.onPause();
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
@@ -236,9 +281,9 @@ public class MainActivity extends AppCompatActivity
         if (id == R.id.nav_camera) {
             // Handle the camera action
         } else if (id == R.id.nav_gallery) {
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setType("image/*");
-            startActivity(intent);
+            Intent galleryIntent = new Intent(Intent.ACTION_VIEW, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            galleryIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(galleryIntent);
 
         } else if (id == R.id.nav_signOut) {
             mAuth.getInstance().signOut();
@@ -250,6 +295,12 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void openBluetoothSettings() {
+        Intent intentOpenBluetoothSettings = new Intent();
+        intentOpenBluetoothSettings.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
+        startActivity(intentOpenBluetoothSettings);
     }
 
     public void checkPairedStatus() {
@@ -279,15 +330,19 @@ public class MainActivity extends AppCompatActivity
     private void activateCamera() {
         Log.i("Log", "Camera Activated");
         // Create an instance of Camera
-        mCamera = getCameraInstance();
+//        mCamera = getCameraInstance();
 
         // Create our Preview view and set it as the content of our activity
-        mPreview = new CameraPreview(this, mCamera);
-        FrameLayout preview = (FrameLayout) findViewById(R.id.cameraPreview);
-        preview.addView(mPreview);
-        preview.setVisibility(View.VISIBLE);
+//        FrameLayout preview = (FrameLayout) findViewById(R.id.cameraPreview);
+//        System.out.println("hey: " + mCamera.getParameters().getPreviewSize().width + " " +
+//                mCamera.getParameters().getPreviewSize().height);
+//        preview.setLayoutParams(new RelativeLayout.LayoutParams(mPreview.getHeight(), mPreview.getWidth()));
+//        preview.addView(mPreview);
+//        System.out.println("hey2: " + preview.getLayoutParams().height + " " + preview.getLayoutParams().width);
+//        preview.setVisibility(View.VISIBLE);
         mPreview.setVisibility(View.INVISIBLE);
         capturedImage.setVisibility(View.INVISIBLE);
+        mCamera = getCameraInstance();
         isCameraActivated = true;
     }
 
@@ -332,6 +387,8 @@ public class MainActivity extends AppCompatActivity
             Bitmap rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
             capturedImage.setImageBitmap(rotatedBitmap);
             capturedImage.setVisibility(View.VISIBLE);
+            System.out.println("hey5: " + capturedImage.getHeight() + " " + capturedImage.getWidth());
+            System.out.println("hey6: " + bitmap.getHeight() + " " + bitmap.getWidth());
             mPreview.setVisibility(View.INVISIBLE);
 
             File pictureFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
@@ -342,9 +399,7 @@ public class MainActivity extends AppCompatActivity
             rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 100 , bos);
             byte[] bitmapdata = bos.toByteArray();
 
-            
             tempFile = pictureFile;
-
 
             scanMedia(pictureFile);
             if (pictureFile == null){
@@ -404,7 +459,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     /** Create a File for saving an image or video */
-    private static File getOutputMediaFile(int type){
+    private static File getOutputMediaFile(int type) {
         // To be safe, you should check that the SDCard is mounted
         // using Environment.getExternalStorageState() before doing this.
 
@@ -415,8 +470,8 @@ public class MainActivity extends AppCompatActivity
         // between applications and persist after your app has been uninstalled.
 
         // Create the storage directory if it does not exist
-        if (!mediaStorageDir.exists()){
-            if (!mediaStorageDir.mkdirs()){
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
                 Log.d("LightHausProject", "failed to create directory");
                 return null;
             }
@@ -425,13 +480,185 @@ public class MainActivity extends AppCompatActivity
         // Create a media file name
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
         File mediaFile;
-        if (type == MEDIA_TYPE_IMAGE){
+        if (type == MEDIA_TYPE_IMAGE) {
             mediaFile = new File(mediaStorageDir.getPath() + File.separator +
-                    "IMG_"+ timeStamp + ".jpg");
+                    "IMG_" + timeStamp + ".jpg");
         } else {
             return null;
         }
 
         return mediaFile;
+    }
+
+    SurfaceHolder.Callback surfaceCallback = new SurfaceHolder.Callback() {
+        @Override
+        public void surfaceCreated(SurfaceHolder holder) {
+        }
+
+        @Override
+        public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+            // If your preview can change or rotate, take care of those events here.
+            // Make sure to stop the preview before resizing or reformatting it.
+
+            if (mPreviewHolder.getSurface() == null){
+                // preview surface does not exist
+                return;
+            }
+
+            // stop preview before making changes
+            try {
+                mCamera.stopPreview();
+            } catch (Exception e){
+                // ignore: tried to stop a non-existent preview
+            }
+
+            // set preview size and make any resize, rotate or
+            // reformatting changes here
+
+            // start preview with new settings
+            try {
+                mCamera.setPreviewDisplay(mPreviewHolder);
+                initPreview(width, height);
+                mCamera.startPreview();
+
+            } catch (Exception e){
+                Log.d(TAG, "Error starting camera preview: " + e.getMessage());
+            }
+        }
+
+        @Override
+        public void surfaceDestroyed(SurfaceHolder holder) {
+            // empty. Take care of releasing the Camera preview in your activity.
+        }
+    };
+//    @Override
+//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+//        final int width = resolveSize(getSuggestedMinimumWidth(), widthMeasureSpec);
+//        final int height = resolveSize(getSuggestedMinimumHeight(), heightMeasureSpec);
+//
+//        setMeasuredDimension(width, height);
+//
+//        Log.i("LOG", "OnMeasure Entered");
+//
+//        if (mSupportedPreviewSizes != null) {
+//            mWidthHeight.add(0, width);
+//            mWidthHeight.add(1, height);
+//        }
+//    }
+
+    Camera.AutoFocusCallback myAutoFocusCallback = new Camera.AutoFocusCallback() {
+        @Override
+        public void onAutoFocus(boolean success, Camera camera) {
+            if (success) {
+                mCamera.cancelAutoFocus();
+            }
+        }
+    };
+
+    private void initPreview(int width, int height) {
+        if (mCamera != null && mPreviewHolder.getSurface() != null) {
+            try {
+                mCamera.setPreviewDisplay(mPreviewHolder);
+                mCamera.setDisplayOrientation(90);
+            } catch (Throwable t) {
+            }
+
+            if (!isCameraConfigured) {
+                Camera.Parameters parameters = mCamera.getParameters();
+                Camera.Size size = getOptimalPreviewSize(width, height, parameters);
+
+                if (size != null) {
+                    parameters.setPreviewSize(size.width, size.height);
+                    if (parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+                        Log.i("Info", "AUTO ACTIVATED");
+                        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                    } else if (parameters.getSupportedFocusModes().contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+                        Log.i("Info", "CONTINUOUS_PICTURE ACTIVATED");
+                        parameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+                    }
+                    mCamera.setParameters(parameters);
+                    double ratio = size.width*1.0 / size.height;
+                    System.out.println("size:" + size.width + " " + size.height + " " + ratio);
+
+                    int displayWidth = getWindowManager().getDefaultDisplay().getWidth();
+                    System.out.println("size:" + (displayWidth*ratio) + " " + (displayWidth) );
+                    System.out.println("displayWidth  = " + displayWidth);
+
+                    RelativeLayout.LayoutParams testLayout = new RelativeLayout.LayoutParams(displayWidth, (int)(displayWidth*ratio));
+                    testLayout.addRule(RelativeLayout.CENTER_HORIZONTAL);
+                    testLayout.addRule(RelativeLayout.CENTER_VERTICAL);
+
+                    mPreview.setLayoutParams(testLayout);
+                    System.out.println("hey3: " + mPreview.getLayoutParams().width + " " + mPreview.getLayoutParams().height);
+                    isCameraConfigured = true;
+                }
+            }
+        }
+    }
+
+//    private Camera.Size getOptimalPreviewSize(int w, int h) {
+//        final double ASPECT_TOLERANCE = 0.1;
+//        double targetRatio=(double)h / w;
+//
+//        List<Camera.Size> sizes = mCamera.getParameters().getSupportedPreviewSizes();
+//
+//        if (sizes == null) return null;
+//
+//        Camera.Size optimalSize = null;
+//        double minDiff = Double.MAX_VALUE;
+//
+//        int targetHeight = h;
+//
+//        for (Camera.Size size : sizes) {
+//            double ratio = (double) size.width / size.height;
+//            if (Math.abs(ratio - targetRatio) > ASPECT_TOLERANCE) continue;
+//            if (Math.abs(size.height - targetHeight) < minDiff) {
+//                optimalSize = size;
+//                minDiff = Math.abs(size.height - targetHeight);
+//            }
+//        }
+//
+//        if (optimalSize == null) {
+//            minDiff = Double.MAX_VALUE;
+//            for (Camera.Size size : sizes) {
+//                if (Math.abs(size.height - targetHeight) < minDiff) {
+//                    optimalSize = size;
+//                    minDiff = Math.abs(size.height - targetHeight);
+//                }
+//            }
+//        }
+//
+//        System.out.println("result: " + optimalSize.width + " " + optimalSize.height);
+//        return optimalSize;
+//    }
+
+    private Camera.Size getOptimalPreviewSize(int width, int height,
+                                              Camera.Parameters parameters) {
+        Camera.Size result=null;
+
+        for (Camera.Size size : parameters.getSupportedPictureSizes()) {
+            System.out.println("picture: " + size.width + " " + size.height);
+        }
+
+        for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
+            System.out.println("picture2: " + size.width + " " + size.height);
+            if (size.width <= width && size.height <= height) {
+                if (result == null) {
+                    result=size;
+                }
+                else {
+                    int resultArea=result.width * result.height;
+                    int newArea=size.width * size.height;
+
+                    if (newArea > resultArea) {
+                        result=size;
+                    }
+                }
+            }
+        }
+
+        System.out.println("result: " + result.width + " " + result.height);
+
+        return(result);
     }
 }
