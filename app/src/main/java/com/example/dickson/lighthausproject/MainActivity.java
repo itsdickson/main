@@ -3,10 +3,8 @@ package com.example.dickson.lighthausproject;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
@@ -15,8 +13,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -53,10 +53,14 @@ import java.util.Set;
 
 import static android.content.ContentValues.TAG;
 
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
+    private String BLUETOOTH_SETTINGS = "bluetooth";
+    private String PERMISSIONS_SETTINGS = "permissions";
 
     private Camera mCamera = null;
     private SurfaceView mPreview = null;
@@ -126,6 +130,13 @@ public class MainActivity extends AppCompatActivity
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(mCamera == null) {
+                    Log.i("LOG", "Camera is not on");
+                    Toast toast = Toast.makeText(MainActivity.this, "Please allow camera permissions from settings", Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0,0);
+                    toast.show();
+                    return;
+                }
                 if (!isCameraActivated) {
                     Log.i("LOG", "Camera activating...");
                     activateCamera();
@@ -212,7 +223,11 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            openBluetoothSettings();
+            openSettings(BLUETOOTH_SETTINGS);
+            return true;
+        }
+        if(id == R.id.permissions) {
+            openSettings(PERMISSIONS_SETTINGS);
             return true;
         }
 
@@ -256,10 +271,21 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    public void openBluetoothSettings() {
-        Intent intentOpenBluetoothSettings = new Intent();
-        intentOpenBluetoothSettings.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
-        startActivity(intentOpenBluetoothSettings);
+    public void openSettings(String setting) {
+        switch (setting) {
+            case "bluetooth":
+                Intent intentOpenBluetoothSettings = new Intent();
+                intentOpenBluetoothSettings.setAction(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
+                startActivity(intentOpenBluetoothSettings);
+                break;
+            case "permissions":
+                Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        Uri.parse("package:" + getPackageName()));
+                intent.addCategory(Intent.CATEGORY_DEFAULT);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                break;
+        }
     }
 
     public void checkPairedStatus() {
