@@ -18,6 +18,7 @@ import android.provider.Settings;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -80,6 +81,42 @@ public class MainActivity extends AppCompatActivity
     public static final int REQUEST_ENABLE_BT = 2;
 
     public static File tempFile = null;
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)  {
+        if (Integer.parseInt(android.os.Build.VERSION.SDK) > 5
+                && keyCode == KeyEvent.KEYCODE_BACK
+                && event.getRepeatCount() == 0) {
+            Log.d("CDA", "onKeyDown Called");
+            onBackPressed();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        Log.d("CDA", "onBackPressed Called");
+        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
+        builder1.setMessage("Exit Application?");
+        builder1.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+                finishAndRemoveTask();
+            }
+        });
+        builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+        AlertDialog alert1 = builder1.create();
+        alert1.show();
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
