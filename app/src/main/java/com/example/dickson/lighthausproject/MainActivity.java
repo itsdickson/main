@@ -1,5 +1,6 @@
 package com.example.dickson.lighthausproject;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -76,6 +77,7 @@ public class MainActivity extends AppCompatActivity
 
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static int flag = 0;
+    public static final int REQUEST_ENABLE_BT = 2;
 
     public static File tempFile = null;
 
@@ -122,10 +124,10 @@ public class MainActivity extends AppCompatActivity
 
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivity(enableBtIntent);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 
-        checkPairedStatus();
+
 
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -200,11 +202,32 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
+        if (mBluetoothAdapter.isEnabled()) {
+            checkPairedStatus();
+        }
         if (!isCameraActivated) {
             Log.i("LOG", "Activating Camera: onResume");
             activateCamera();
         }
         mPreview.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case REQUEST_ENABLE_BT:
+                if (resultCode == Activity.RESULT_OK) {
+                    checkPairedStatus();
+                } else {
+                    Toast.makeText(MainActivity.this, "Bluetooth is not on!", Toast.LENGTH_SHORT);
+                }
+                break;
+
+            default:
+                super.onActivityResult(requestCode, resultCode, data);
+                break;
+        }
+
     }
 
     @Override
