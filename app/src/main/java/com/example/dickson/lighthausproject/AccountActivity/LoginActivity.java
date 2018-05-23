@@ -28,6 +28,9 @@ import com.google.firebase.auth.FirebaseAuthException;
 import static android.content.ContentValues.TAG;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 
 /**
  * Created by Junyang on 14/12/2017.
@@ -40,6 +43,8 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
     private Button signUp, signIn;
     private CheckBox visibility;
     private ProgressDialog mProgressDialog;
+    private String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+    private int validEmailFlag = 0;
 
     private static final int PERMISSION_REQUEST_CAMERA = 0;
     private static final int PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
@@ -184,51 +189,59 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
         signIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mProgressDialog.setMessage("Logging in...");
-                mProgressDialog.show();
                 String email = editEmail.getText().toString();
                 String password = editPass.getText().toString();
 
-                if (TextUtils.isEmpty(email)) {
-                    Toast.makeText(getApplicationContext(), "Enter email address!", Toast.LENGTH_SHORT).show();
+                if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+                    Toast.makeText(getApplicationContext(), "Please fill in email/password", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                if (TextUtils.isEmpty(password)) {
-                    Toast.makeText(getApplicationContext(), "Enter password!", Toast.LENGTH_SHORT).show();
+                Pattern pattern = Pattern.compile(emailRegex);
+                Matcher matcher = pattern.matcher(email);
+
+                if (!matcher.matches()) {
+                    Toast.makeText(getApplicationContext(), "The email address is invalid!", Toast.LENGTH_SHORT).show();
                     return;
                 }
+                else {
+                    validEmailFlag = 1;
+                }
 
+                if (validEmailFlag == 1) {
+                    mProgressDialog.setMessage("Logging in...");
+                    mProgressDialog.show();
 
-                //authenticate user
-                mAuth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<AuthResult> task) {
-                                mProgressDialog.dismiss();
-                                if (!task.isSuccessful()) {
-                                    try {
-                                        throw task.getException();
-                                    } catch (FirebaseAuthException e) {
-                                        switch (e.getErrorCode()) {
-                                            case "ERROR_USER_NOT_FOUND":
-                                                Toast.makeText(LoginActivity.this, "User not found.", Toast.LENGTH_SHORT).show();
-                                                break;
-                                            case "ERROR_WRONG_PASSWORD":
-                                                Toast.makeText(LoginActivity.this, "Invalid password.", Toast.LENGTH_SHORT).show();
-                                                break;
+                    //authenticate user
+                    mAuth.signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener(LoginActivity.this, new OnCompleteListener<AuthResult>() {
+                                @Override
+                                public void onComplete(@NonNull Task<AuthResult> task) {
+                                    mProgressDialog.dismiss();
+                                    if (!task.isSuccessful()) {
+                                        try {
+                                            throw task.getException();
+                                        } catch (FirebaseAuthException e) {
+                                            switch (e.getErrorCode()) {
+                                                case "ERROR_USER_NOT_FOUND":
+                                                    Toast.makeText(LoginActivity.this, "User not found.", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                                case "ERROR_WRONG_PASSWORD":
+                                                    Toast.makeText(LoginActivity.this, "Invalid password.", Toast.LENGTH_SHORT).show();
+                                                    break;
+                                            }
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
                                         }
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
+                                    } else {
+                                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                        startActivity(intent);
+                                        Toast.makeText(LoginActivity.this, "Successfully signed in.", Toast.LENGTH_SHORT).show();
+                                        finish();
                                     }
-                                } else {
-                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                                    startActivity(intent);
-                                    Toast.makeText(LoginActivity.this, "Successfully signed in." ,Toast.LENGTH_SHORT).show();
-                                    finish();
                                 }
-                            }
-                        });
+                            });
+                }
             }
         });
     }
