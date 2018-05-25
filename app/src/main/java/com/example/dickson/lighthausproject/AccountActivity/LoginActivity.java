@@ -47,6 +47,29 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
     private static final int PERMISSION_REQUEST_CAMERA = 0;
     private static final int PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 1;
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event)  {
+        if (Integer.parseInt(android.os.Build.VERSION.SDK) > 5
+                && keyCode == KeyEvent.KEYCODE_BACK
+                && event.getRepeatCount() == 0) {
+            Log.d("CDA", "onKeyDown Called");
+            onBackPressed();
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        Log.d("CDA", "onBackPressed Called");
+        super.onBackPressed();
+        Intent startMain = new Intent(Intent.ACTION_MAIN);
+        startMain.addCategory(Intent.CATEGORY_HOME);
+        startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(startMain);
+    }
+
 
     @Override
     public void onStart() {
@@ -65,6 +88,13 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
     @Override
     protected void onResume() {
         super.onResume();
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        System.out.println("user " + user);
+        if(user != null) {
+            Intent i = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(i);
+        }
 
         if (ContextCompat.checkSelfPermission(LoginActivity.this,
                 android.Manifest.permission.CAMERA)
@@ -159,6 +189,7 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
 
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        System.out.println("user " + user);
         if(user != null) {
             Intent i = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(i);

@@ -39,6 +39,7 @@ import android.widget.Toast;
 import com.example.dickson.lighthausproject.AccountActivity.LoginActivity;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
@@ -75,6 +76,8 @@ public class MainActivity extends AppCompatActivity
     private boolean isCameraActivated;
     private boolean isCameraTurnedOn;
     private boolean isCameraConfigured = false;
+    private boolean pairedCheck = false;
+    private boolean bluetoothCheck = false;
 
     public static final int MEDIA_TYPE_IMAGE = 1;
     public static int flag = 0;
@@ -104,7 +107,11 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.cancel();
-                finishAndRemoveTask();
+                Intent startMain = new Intent(Intent.ACTION_MAIN);
+                startMain.addCategory(Intent.CATEGORY_HOME);
+                startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(startMain);
+
             }
         });
         builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -115,6 +122,8 @@ public class MainActivity extends AppCompatActivity
         });
         AlertDialog alert1 = builder1.create();
         alert1.show();
+        bluetoothCheck = false;
+        pairedCheck = false;
 
     }
 
@@ -162,6 +171,7 @@ public class MainActivity extends AppCompatActivity
         if (!mBluetoothAdapter.isEnabled()) {
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            bluetoothCheck = true;
         }
 
 
@@ -169,6 +179,10 @@ public class MainActivity extends AppCompatActivity
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(!mBluetoothAdapter.isEnabled()) {
+                    Toast.makeText(MainActivity.this, "Please turn on bluetooth", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if(mCamera == null) {
                     Log.i("LOG", "Camera is not on");
                     Toast toast = Toast.makeText(MainActivity.this, "Please allow camera permissions from settings", Toast.LENGTH_SHORT);
@@ -239,8 +253,22 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onResume() {
         super.onResume();
+        FirebaseUser user = mAuth.getCurrentUser();
+        System.out.println("user " + user);
+        if(user == null) {
+            Intent i = new Intent(MainActivity.this, LoginActivity.class);
+            startActivity(i);
+        }
         if (mBluetoothAdapter.isEnabled()) {
-            checkPairedStatus();
+            if(!pairedCheck) {
+                checkPairedStatus();
+            }
+        } else {
+            if(!bluetoothCheck) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                bluetoothCheck = true;
+            }
         }
         if (!isCameraActivated) {
             Log.i("LOG", "Activating Camera: onResume");
@@ -320,7 +348,8 @@ public class MainActivity extends AppCompatActivity
             startActivity(galleryIntent);
 
         } else if (id == R.id.nav_signOut) {
-            mAuth.getInstance().signOut();
+            mAuth.signOut();
+            System.out.println("hahaha" + mAuth.getCurrentUser());
             Intent i = new Intent(this, LoginActivity.class);
             startActivity(i);
         }
@@ -370,6 +399,7 @@ public class MainActivity extends AppCompatActivity
         alert1.show();
         ArrayList<BluetoothDevice> list = new ArrayList<>();
         list.addAll(pairedDevices);
+        pairedCheck = true;
     }
 
     private void activateCamera() {
