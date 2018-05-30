@@ -180,7 +180,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 if(!mBluetoothAdapter.isEnabled()) {
-                    Toast.makeText(MainActivity.this, "Please turn on bluetooth", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Please turn on bluetooth to allow camera usage", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 if(mCamera == null) {
@@ -248,6 +248,33 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        if (hasFocus) {
+            // notification is pulled up
+            Log.d(TAG, "Window is pulled up now!");
+            if(!mBluetoothAdapter.isEnabled()) {
+                pairedCheck = false;
+                Toast.makeText(MainActivity.this, "Please turn on bluetooth to allow camera usage", Toast.LENGTH_SHORT).show();
+                if (isCameraTurnedOn) {
+                    mCamera.stopPreview();
+                }
+                releaseCamera();              // release the camera immediately on pause event
+                mCamera = null;
+                isCameraTurnedOn = false;
+                return;
+            } else {
+                if(!pairedCheck) {
+                    checkPairedStatus();
+                }
+            }
+        } else {
+            // notification is pulled down
+            Log.d(TAG, "Window is pulled down now!");
+        }
+        super.onWindowFocusChanged(hasFocus);
     }
 
     @Override

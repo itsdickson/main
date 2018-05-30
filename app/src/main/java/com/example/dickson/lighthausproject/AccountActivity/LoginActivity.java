@@ -144,8 +144,21 @@ public class LoginActivity extends AppCompatActivity implements ActivityCompat.O
     }
 
     @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        if (hasFocus) {
+            // notification is pulled up
+            Log.d(TAG, "Window is pulled up now!");
+        } else {
+            // notification is pulled down
+            Log.d(TAG, "Window is pulled down now!");
+        }
+        super.onWindowFocusChanged(hasFocus);
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
+        Log.d(TAG, "Application is paused now!");
     }
 
     @Override
