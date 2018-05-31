@@ -67,4 +67,12 @@
         android:textAppearance="@style/TextAppearance.AppCompat"
         android:textSize="12sp" />
 
+    <Button
+        android:id="@+id/playBtn"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_alignBottom="@+id/startBtn"
+        android:layout_centerHorizontal="true"
+        android:background="@android:drawable/ic_media_play" />
+
 </RelativeLayout>

@@ -4,12 +4,16 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothHeadset;
+import android.bluetooth.BluetoothProfile;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.hardware.Camera;
+import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -34,6 +38,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.dickson.lighthausproject.AccountActivity.LoginActivity;
@@ -50,7 +55,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
@@ -85,6 +89,21 @@ public class MainActivity extends AppCompatActivity
 
     public static File tempFile = null;
 
+    public static BluetoothHeadset mBluetoothHeadset;
+
+    private BluetoothProfile.ServiceListener mProfileListener = new BluetoothProfile.ServiceListener() {
+        public void onServiceConnected(int profile, BluetoothProfile proxy) {
+            if (profile == BluetoothProfile.HEADSET) {
+                mBluetoothHeadset = (BluetoothHeadset) proxy;
+            }
+        }
+        public void onServiceDisconnected(int profile) {
+            if (profile == BluetoothProfile.HEADSET) {
+                mBluetoothHeadset = null;
+            }
+        }
+    };
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event)  {
         if (Integer.parseInt(android.os.Build.VERSION.SDK) > 5
@@ -112,6 +131,8 @@ public class MainActivity extends AppCompatActivity
                 startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(startMain);
 
+                //Close proxy after usage (for future usage)
+                mBluetoothAdapter.closeProfileProxy(BluetoothProfile.HEADSET, mBluetoothHeadset);
             }
         });
         builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -125,6 +146,8 @@ public class MainActivity extends AppCompatActivity
         bluetoothCheck = false;
         pairedCheck = false;
 
+
+
     }
 
     @Override
@@ -132,7 +155,9 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+
         setSupportActionBar(toolbar);
+
 
         isCameraActivated = false;
         isCameraTurnedOn = false;
@@ -145,6 +170,7 @@ public class MainActivity extends AppCompatActivity
         Button startBtn = (Button) findViewById(R.id.startBtn);
         Button focusBtn = (Button) findViewById(R.id.focusBtn);
         Button sendBtn = (Button) findViewById(R.id.sendBtn);
+        Button playBtn = (Button) findViewById(R.id.playBtn);
 
         mPreview = (SurfaceView) findViewById(R.id.cameraPreview);
         mPreviewHolder = mPreview.getHolder();
@@ -176,6 +202,20 @@ public class MainActivity extends AppCompatActivity
 
 
 
+        playBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Checks if music is currently playing
+                AudioManager manager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+                if (manager.isMusicActive()) {
+                    Toast.makeText(MainActivity.this, "Song is already playing", Toast.LENGTH_SHORT).show();
+                } else {
+                    Intent intent = new Intent("android.intent.action.MUSIC_PLAYER");
+                    startActivity(intent);
+                }
+            }
+        });
+
         startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -200,6 +240,7 @@ public class MainActivity extends AppCompatActivity
                     turnCamera();
                 }
                 flag = 0;
+
             }
         });
 
@@ -248,6 +289,14 @@ public class MainActivity extends AppCompatActivity
                 }
             }
         });
+        NavigationView nav = (NavigationView) findViewById(R.id.nav_view);
+        View navView = nav.getHeaderView(0);
+        TextView navEmail = (TextView) navView.findViewById(R.id.email);
+        try {
+            navEmail.setText(mAuth.getCurrentUser().getEmail());
+        } catch (NullPointerException e) {
+            Log.e("Error", "getCurrentUser().getEmail is null");
+        }
     }
 
     @Override
@@ -414,6 +463,7 @@ public class MainActivity extends AppCompatActivity
                 dialog.cancel();
                 Intent settingsIntent = new Intent(android.provider.Settings.ACTION_BLUETOOTH_SETTINGS);
                 startActivity(settingsIntent);
+
             }
         });
         builder1.setNegativeButton("No", new DialogInterface.OnClickListener() {
@@ -424,8 +474,9 @@ public class MainActivity extends AppCompatActivity
         });
         AlertDialog alert1 = builder1.create();
         alert1.show();
-        ArrayList<BluetoothDevice> list = new ArrayList<>();
-        list.addAll(pairedDevices);
+        for(BluetoothDevice bt: pairedDevices) {
+            Log.d("Debug", "MAC ADDRESS = " + bt.toString() +  " NAME = " + bt.getName());
+        }
         pairedCheck = true;
     }
 
